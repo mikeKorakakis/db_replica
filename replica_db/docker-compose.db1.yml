@@ -10,7 +10,8 @@ services:
       POSTGRES_DB: main_db
     volumes:
       - pgdata-primary:/var/lib/postgresql/data
-      - ./config/primary/:/config/postgresql.conf
+      - ./config/primary/postgresql.conf:/config/postgresql.conf
+      - ./config/primary/pg_hba.conf:/config/pg_hba.conf
     ports:
       - "5432:5432"
     networks:
