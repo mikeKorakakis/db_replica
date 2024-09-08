@@ -10,14 +10,13 @@ services:
       POSTGRES_DB: main_db
     volumes:
       - pgdata-primary:/var/lib/postgresql/data
-      - ./config/primary/postgresql.conf:/var/lib/postgresql/data/postgresql.conf
-      - ./config/primary/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+      - ./config/primary/:/config/postgresql.conf
     ports:
       - "5432:5432"
     networks:
       - app-network
     restart: unless-stopped
-    command: postgres -c config_file=/var/lib/postgresql/data/postgresql.conf
+    command: "postgres -c config_file=/config/postgresql.conf"
 
   pgadmin:
     image: dpage/pgadmin4:latest

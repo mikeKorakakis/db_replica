@@ -10,13 +10,15 @@ services:
       POSTGRES_DB: main_db
     volumes:
       - pgdata-replica:/var/lib/postgresql/data
-      - ./config/replica/recovery.conf:/var/lib/postgresql/data/recovery.conf
+      - ./config/replica/recovery.conf:/etc/postgresql/recovery.conf
     ports:
       - "5432:5432"
     networks:
       - app-network
     restart: unless-stopped
-    command: postgres -c hot_standby=on
+    command: >
+      bash -c "ln -sf /etc/postgresql/recovery.conf /var/lib/postgresql/data/recovery.conf &&
+               postgres -c hot_standby=on"
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -32,7 +34,7 @@ services:
     volumes:
       - pgadmin-data:/var/lib/pgadmin
     depends_on:
-      - db-primary
+      - db-replica
     networks:
       - app-network
     restart: unless-stopped
@@ -77,3 +79,4 @@ volumes:
   certs:
   vhost.d:
   html:
+  pgadmin-data:
