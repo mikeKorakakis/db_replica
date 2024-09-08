@@ -18,6 +18,8 @@ services:
     restart: unless-stopped
     command: "postgres -c config_file=/config/postgresql.conf"
 
+
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
