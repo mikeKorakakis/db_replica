@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  db-replica:
+    image: postgres:latest
+    container_name: db-replica
+    environment:
+      POSTGRES_USER: replication_user
+      POSTGRES_PASSWORD: replication_password
+      POSTGRES_DB: main_db
+    volumes:
+      - pgdata-replica:/var/lib/postgresql/data
+      - ./config/replica/recovery.conf:/var/lib/postgresql/data/recovery.conf
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    restart: unless-stopped
+    command: postgres -c hot_standby=on
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      VIRTUAL_HOST: pg2.korakakis.com
+      LETSENCRYPT_HOST: pg2.korakakis.com
+      LETSENCRYPT_EMAIL: mike.korakakis@gmail.com
+    ports:
+      - "5555:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - db-primary
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  proxy:
+    image: jwilder/nginx-proxy
+    container_name: proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - certs:/etc/nginx/certs:rw
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+    networks:
+      - app-network
+
+  proxy-letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: letsencrypt
+    restart: unless-stopped
+    depends_on:
+      - proxy
+    environment:
+      NGINX_PROXY_CONTAINER: proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - certs:/etc/nginx/certs:rw
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  pgdata-replica:
+  certs:
+  vhost.d:
+  html:
